@@ -1258,11 +1258,11 @@ CPNotPredicateModifier = 4;
 	if(rowIndex==CPNotFound)
 		return;
 		
-	var criteria=[self refreshCriteriaForRow:aRow rowIndex:rowIndex rowType:SPRuleEditorRowTypeSimple 
+	var criteria=[self _refreshCriteriaForRow:aRow rowIndex:rowIndex rowType:SPRuleEditorRowTypeSimple 
 		startingAtIndex:index+1 currentValueIndex:valueIndex currentValue:value];
 
 	[self willModifyRow:aRow];
-	[_model setCriteria:criteria forRow:aRow];	
+	[_model setCriteria: criteria forRow:aRow];	
 }
 
 -(id)criterionItemCopy:(id)item
@@ -1319,12 +1319,12 @@ CPNotPredicateModifier = 4;
 	}
 }
 
-- (void)_adjustViewForTitle: myTitle inRow: myRow
+- (void)_adjustViewForTitle: myTitle startingAtColumn:(unsigned) col inRow: myRow
 {	var rowView= [_contentView rowViewWithItem: [_model rowAtIndex: myRow]];
 	var subviews=[[rowView contentView] subviews];
 
 	var i, subviewsCount= [subviews count];
-	for (i=0; i < subviewsCount; i++)
+	for (i= col; i < subviewsCount; i++)
 	{	var view=[subviews objectAtIndex: i];
 		if([view isKindOfClass: [CPPopUpButton class]])
 		{	var items=[view itemArray];
@@ -1332,7 +1332,11 @@ CPNotPredicateModifier = 4;
 			for (j=0; j < itemsCount; j++)
 			{
 				if([items[j] title] == myTitle)
-					[view selectItemWithTitle: myTitle ];
+				{	[view selectItemWithTitle: myTitle ];
+					var valueIndex= [view indexOfSelectedItem];
+					[self valueChanged: [view selectedItem] criterionIndex: i valueIndex: valueIndex inRow: [_model rowAtIndex: myRow] ]
+					return;
+				}
 			}
 		}
 	}
@@ -1360,13 +1364,18 @@ CPNotPredicateModifier = 4;
 	{	var items=buttons[i];
 		var itemsCount= [items count];
 		for(j=0; j< itemsCount; j++)
-		{	var myparts= [_delegate ruleEditor: self predicatePartsForCriterion: criterion withDisplayValue: items[j] inRow: myRow];
-			if( [myparts objectForKey: SPRuleEditorPredicateComparisonModifier] &&
+		{
+			var myparts= [_delegate ruleEditor: self predicatePartsForCriterion: criterion withDisplayValue: items[j] inRow: myRow];
+			if(      [myparts objectForKey: SPRuleEditorPredicateComparisonModifier] &&
 					[[myparts objectForKey: SPRuleEditorPredicateComparisonModifier] intValue] === [[component objectForKey: SPRuleEditorPredicateComparisonModifier]  intValue] )
 				return [items[j] title];
-			else if( [myparts objectForKey: SPRuleEditorPredicateCompoundType] &&
+			if( [myparts objectForKey: SPRuleEditorPredicateCompoundType] &&
 					[[myparts objectForKey: SPRuleEditorPredicateCompoundType] intValue] === [[component objectForKey: SPRuleEditorPredicateCompoundType]  intValue] )
 				return [items[j] title];
+	/*		if( [myparts objectForKey: SPRuleEditorPredicateOperatorType] &&
+					[[myparts objectForKey: SPRuleEditorPredicateOperatorType] intValue] === [[component objectForKey: SPRuleEditorPredicateOperatorType]  intValue] )
+				return [items[j] title];
+	*/
 		}
 	} return nil;
 }
@@ -1397,14 +1406,14 @@ CPNotPredicateModifier = 4;
 							 SPRuleEditorPredicateLeftExpression: [myPredicate leftExpression],
 							 SPRuleEditorPredicateRightExpression: [myPredicate rightExpression]
 							};
-			[self _adjustViewForTitle: [[myPredicate leftExpression] description] inRow: myRow];
+			[self _adjustViewForTitle: [[myPredicate leftExpression] description] startingAtColumn: 0 inRow: myRow];
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
-			[self _adjustViewForTitle: title inRow: myRow];
+			[self _adjustViewForTitle: title startingAtColumn: 1 inRow: myRow];
 		} else if( [myPredicate isKindOfClass: CPCompoundPredicate])
 		{	var component= @{SPRuleEditorPredicateCompoundType: [CPNumber numberWithInt: [myPredicate compoundPredicateType]]
 							};
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
-			[self _adjustViewForTitle: title inRow: myRow];
+			[self _adjustViewForTitle: title startingAtColumn: 0  inRow: myRow];
 		}
 	}
 }
