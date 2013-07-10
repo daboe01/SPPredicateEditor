@@ -31,7 +31,7 @@ then symlink the library in your project
 
 ## What's missing (compared to cocoa)
 
-* KVO on SPRuleEditor : not much used I think, but should be easy to do listening to the new SPRuleEditorModel notifications
+* KVO on SPRuleEditor : freshly implemented in this fork!!
 
 * row selection (highlighting) : though 2 methods are still present in cocoa API, this feature has been abandoned by Apple. They say in their forums that it was "confusing" for their users. I agree :)
 
