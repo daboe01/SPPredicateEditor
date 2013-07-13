@@ -421,7 +421,7 @@ SPRuleEditorRowViewIndent=30;
 		view=subviews[i];
 		if(![view isKindOfClass:SPRuleEditorRowView])
 			continue;
-		[view drawBordersInContext:context verticalOffset:0 width:frame.size.width];
+		[view drawBordersInContext: context verticalOffset:0 width:frame.size.width];
 	}
 }
 
@@ -472,7 +472,6 @@ SPRuleEditorRowViewIndent=30;
 	var size=[self frameSize];
 	size.height=deltaY;
 	[self setFrameSize:size];
-	[[self superview] setFrameSize:size];
 }
 
 -(CGRect)initialFrameForItem:(SPRuleEditorModelItem)item

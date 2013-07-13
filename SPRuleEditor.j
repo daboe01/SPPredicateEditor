@@ -806,7 +806,7 @@ CPNotPredicateModifier = 4;
 	var currentCriterion=nil;
 	var currentCriterionItem=nil;
 	
-	if(aRow&&index>=0)
+	if(aRow && index>=0)
 	{
 		var criteria=[aRow criteria];
 		var count=[criteria count];
@@ -836,11 +836,9 @@ CPNotPredicateModifier = 4;
 		[currentCriterion setCurrentIndex:valueIndex];
 	}
 	
-	var newCriterion;
 	var criterionItem;
 	var criterionDisplayValue=nil;
 	var nb;
-	var first=YES;
 
 	while((nb=[_delegate ruleEditor: self numberOfChildrenForCriterion: currentCriterionItem withRowType:rowType])>0)
 	{
@@ -856,45 +854,8 @@ CPNotPredicateModifier = 4;
 		if(currentCriterionItem==[items objectAtIndex:0])
 			[CPException raise:CPInternalInconsistencyException reason:_cmd+@" : infinite loop detected"];
 
-		if(first)
-		{
-			first=NO;
-			
-			var value;
-			for(var i=0;i<nb;i++)
-			{
-				criterionItem=[items objectAtIndex:i];
-				value=[_delegate ruleEditor:self displayValueForCriterion:criterionItem inRow:rowIndex];
-				
-				if([value isKindOfClass:CPMenuItem]&&[value isSeparatorItem])
-					continue;
-
-				if(![self rowForDisplayValue:value])
-				{
-					currentCriterionItem=criterionItem;
-					criterionDisplayValue=value;
-					break;
-				}
-			}
-			if(!criterionDisplayValue)
-			{
-				do
-				{
-					var useCeil=(new Date().getTime()%2)==0;
-					var rand=Math.random()*(nb-1);
-					var idx=useCeil?Math.ceil(rand):Math.floor(rand);
-					idx=Math.min(idx,nb-1);
-					currentCriterionItem=[items objectAtIndex:idx];
-					criterionDisplayValue=[_delegate ruleEditor:self displayValueForCriterion:currentCriterionItem inRow:rowIndex];
-				}
-				while([criterionDisplayValue isKindOfClass:CPMenuItem]&&[criterionDisplayValue isSeparatorItem]);
-			}
-		}
-		else
-		{
-			currentCriterionItem=[items objectAtIndex:0];
-			criterionDisplayValue=[_delegate ruleEditor:self displayValueForCriterion:currentCriterionItem inRow:rowIndex];
-		}
+		currentCriterionItem=[items objectAtIndex:0];
+		criterionDisplayValue=[_delegate ruleEditor:self displayValueForCriterion:currentCriterionItem inRow:rowIndex];
 		
 		[criteria addObject:[[SPRuleEditorCriterion alloc] initWithItems:items displayValue:criterionDisplayValue]];
 	}
@@ -1258,7 +1219,7 @@ CPNotPredicateModifier = 4;
 	if(rowIndex==CPNotFound)
 		return;
 		
-	var criteria=[self _refreshCriteriaForRow:aRow rowIndex:rowIndex rowType:SPRuleEditorRowTypeSimple 
+	var criteria=[self refreshCriteriaForRow:aRow rowIndex:rowIndex rowType:SPRuleEditorRowTypeSimple 
 		startingAtIndex:index+1 currentValueIndex:valueIndex currentValue:value];
 
 	[self willModifyRow:aRow];
@@ -1333,6 +1294,7 @@ CPNotPredicateModifier = 4;
 			{
 				if([items[j] title] == myTitle)
 				{	[view selectItemWithTitle: myTitle ];
+
 					var valueIndex= [view indexOfSelectedItem];
 					[self valueChanged: [view selectedItem] criterionIndex: i valueIndex: valueIndex inRow: [_model rowAtIndex: myRow] ]
 					return;
@@ -1356,46 +1318,60 @@ CPNotPredicateModifier = 4;
 	} return ret;
 }
 
-
+-(unsigned) _numberOfMatchesBetweenDict1:dict1 andDict2:dict2
+{	var allKeys=[dict1 allKeys];
+	var length=[allKeys count];
+	var hits=0;
+	for(var i=0; i < length; i++)
+	{	if([dict1 objectForKey: allKeys[i]] == [dict2 objectForKey: allKeys[i]]) hits++;
+	} return hits;
+}
 - _itemForPredicateComponent:(CPDictionary)component criterion: criterion inRow: myRow
 {	var buttons=[self _getTitlesInRow: myRow];
 	var j, buttonsCount= [buttons count];
 	for (var i=0; i < buttonsCount; i++)
 	{	var items=buttons[i];
 		var itemsCount= [items count];
+		var matches=[CPMutableArray arrayWithCapacity: itemsCount];
+		var highestIndex=CPNotFound;
+		var highestMatch=CPNotFound;
 		for(j=0; j< itemsCount; j++)
 		{
 			var myparts= [_delegate ruleEditor: self predicatePartsForCriterion: criterion withDisplayValue: items[j] inRow: myRow];
-			if(      [myparts objectForKey: SPRuleEditorPredicateComparisonModifier] &&
-					[[myparts objectForKey: SPRuleEditorPredicateComparisonModifier] intValue] === [[component objectForKey: SPRuleEditorPredicateComparisonModifier]  intValue] )
-				return [items[j] title];
-			if( [myparts objectForKey: SPRuleEditorPredicateCompoundType] &&
-					[[myparts objectForKey: SPRuleEditorPredicateCompoundType] intValue] === [[component objectForKey: SPRuleEditorPredicateCompoundType]  intValue] )
-				return [items[j] title];
-	/*		if( [myparts objectForKey: SPRuleEditorPredicateOperatorType] &&
-					[[myparts objectForKey: SPRuleEditorPredicateOperatorType] intValue] === [[component objectForKey: SPRuleEditorPredicateOperatorType]  intValue] )
-				return [items[j] title];
-	*/
+			var match=[self _numberOfMatchesBetweenDict1: myparts andDict2: component];
+			if (match> highestMatch)
+			{	highestMatch=match;
+				highestIndex=j;
+			}
 		}
-	} return nil;
+	}
+	if(highestIndex >= 0) return [items[highestIndex] title];
+	else return nil;
 }
 
-- (void)_fixCriteriaRight: crits forPredicate: myPredicate inRow: myRow
-{	if(! [myPredicate respondsToSelector:@selector(rightExpression)]) return;
+- (void)_fixCriteriaRightForPredicate: myPredicate inRow: myRow
+{	var crits= [[_model rowAtIndex: myRow] criteria]
 	var count = [crits count];
 
-    for (var i=0; i < count; i++)
+    for(var i=0; i < count; i++)
 	{	var  currCrit= [crits objectAtIndex:i];
+
 		if(![currCrit._displayValue isKindOfClass: [CPMenuItem class]])
 		{	var mv= [[myPredicate rightExpression] constantValue];
 			if([currCrit._displayValue isKindOfClass:CPTokenField] && ! [mv isKindOfClass:CPArray])
 				mv=mv.split(",");
+			else if([currCrit._displayValue isKindOfClass:CPDatePicker])
+			{	var parts = mv.split('-');
+  				mv=new Date(parts[0], parts[1]-1, parts[2]); // months are 0-based
+			}
 			[currCrit._displayValue setObjectValue: mv];
+			[self valueChanged: currCrit._displayValue criterionIndex: i valueIndex: 0 inRow: [_model rowAtIndex: myRow] ];
 		}
 	}
 }
-- (void)_fixCriteriaLeft: crits forPredicate: myPredicate inRow: myRow
-{
+
+- (void)_fixCriteriaLeftForPredicate: myPredicate inRow: myRow
+{	var crits= [[_model rowAtIndex: myRow] criteria]
 	var count = [crits count];
 
     for (var i=0; i < count; i++)
@@ -1410,7 +1386,7 @@ CPNotPredicateModifier = 4;
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
 			[self _adjustViewForTitle: title startingAtColumn: 1 inRow: myRow];
 		} else if( [myPredicate isKindOfClass: CPCompoundPredicate])
-		{	var component= @{SPRuleEditorPredicateCompoundType: [CPNumber numberWithInt: [myPredicate compoundPredicateType]]
+		{	var component= @{ SPRuleEditorPredicateCompoundType: [CPNumber numberWithInt: [myPredicate compoundPredicateType]]
 							};
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
 			[self _adjustViewForTitle: title startingAtColumn: 0  inRow: myRow];
@@ -1420,7 +1396,6 @@ CPNotPredicateModifier = 4;
 
 - (void)_setSubpredicates: predicates forParentIndex: parentIndex
 {
-
 	var count = [predicates count];
 	var currentIndex= parentIndex+1;
     for (var i=0; i < count; i++, currentIndex++)
@@ -1430,9 +1405,9 @@ CPNotPredicateModifier = 4;
 		{	rowType = SPRuleEditorRowTypeCompound;
 		}
 		var criteria=[self refreshCriteriaForNewRowOfType: rowType atIndex: currentIndex];
-		[self _fixCriteriaRight: criteria forPredicate: subpredicate inRow: currentIndex];
 		[_model insertNewRowAtIndex: currentIndex ofType: rowType withParentRowIndex: parentIndex criteria:criteria];
-		[self _fixCriteriaLeft: criteria forPredicate: subpredicate inRow: currentIndex];
+		[self _fixCriteriaLeftForPredicate: subpredicate inRow: currentIndex];
+		[self _fixCriteriaRightForPredicate: subpredicate inRow: currentIndex];
 		if(rowType == SPRuleEditorRowTypeCompound)
 			[self _setSubpredicates: subpredicate._predicates forParentIndex: currentIndex];
 	}
@@ -1450,9 +1425,8 @@ CPNotPredicateModifier = 4;
 	{	myPredicate=[[CPCompoundPredicate alloc] initWithType: CPAndPredicateType subpredicates:[myPredicate]];
 	}
 	var criteria=[self refreshCriteriaForNewRowOfType: rowType atIndex: 0];	
-	[self _fixCriteriaRight: criteria forPredicate: myPredicate  inRow: 0];
 	[_model addNewRowOfType: rowType criteria: criteria];
-	[self _fixCriteriaLeft: criteria  forPredicate: myPredicate  inRow: 0];
+	[self _fixCriteriaLeftForPredicate: myPredicate  inRow: 0];
 	var subpredicates= myPredicate._predicates;
 	if(subpredicates) [self _setSubpredicates: subpredicates  forParentIndex: 0];
 }
