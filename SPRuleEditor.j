@@ -549,7 +549,7 @@ CPNotPredicateModifier = 4;
 {
 	var criteria=[self refreshCriteriaForNewRowOfType:rowType atIndex:rowIndex];
 
-	criteria=[self willInsertNewRowWithCriteria:criteria atIndex:rowIndex];
+	criteria=[self willInsertNewRowWithCriteria: criteria atIndex:rowIndex];
 	if(!criteria)
 		return;
 
@@ -858,6 +858,7 @@ CPNotPredicateModifier = 4;
 		criterionDisplayValue=[_delegate ruleEditor:self displayValueForCriterion:currentCriterionItem inRow:rowIndex];
 		
 		[criteria addObject:[[SPRuleEditorCriterion alloc] initWithItems:items displayValue:criterionDisplayValue]];
+		if(_setObjectValueIsMuted) break;
 	}
 	return criteria;
 }
@@ -1382,7 +1383,7 @@ CPNotPredicateModifier = 4;
 							 SPRuleEditorPredicateLeftExpression: [myPredicate leftExpression],
 							 SPRuleEditorPredicateRightExpression: [myPredicate rightExpression]
 							};
-			[self _adjustViewForTitle: [[myPredicate leftExpression] description] startingAtColumn: 0 inRow: myRow];
+			[self _adjustViewForTitle: [[myPredicate leftExpression] description] startingAtColumn: i inRow: myRow];
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
 			[self _adjustViewForTitle: title startingAtColumn: 1 inRow: myRow];
 		} else if( [myPredicate isKindOfClass: CPCompoundPredicate])
@@ -1398,7 +1399,7 @@ CPNotPredicateModifier = 4;
 {
 	var count = [predicates count];
 	var currentIndex= parentIndex+1;
-    for (var i=0; i < count; i++, currentIndex++)
+	for (var i=0; i < count; i++, currentIndex++)
     {	var rowType= SPRuleEditorRowTypeSimple;
 		var  subpredicate = [predicates objectAtIndex:i];
         if ([subpredicate isKindOfClass:[CPCompoundPredicate class]] )
