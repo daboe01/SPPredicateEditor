@@ -441,10 +441,9 @@ SPRuleEditorViewAltKeyUp = @"SPRuleEditorViewAltKeyUp";
 		return;
 	}
 
-	if([item isKindOfClass:CPTextField])
+	if([item isKindOfClass:CPTextField] && ![item isKindOfClass:CPTokenField])
 	{
 	    [[CPNotificationCenter defaultCenter] addObserver:self selector:@selector(criterionChangedNotification:) name:CPControlTextDidEndEditingNotification object:item];
-	    [[CPNotificationCenter defaultCenter] addObserver:self selector:@selector(criterionChangedNotification:) name: CPControlTextDidChangeNotification object:item];
 	    return;
 	}
 
