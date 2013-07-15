@@ -441,21 +441,13 @@ SPRuleEditorViewAltKeyUp = @"SPRuleEditorViewAltKeyUp";
 		return;
 	}
 
-	if([item isKindOfClass:CPTextField] && ![item isKindOfClass:CPTokenField])
+	if([item isKindOfClass:CPTextField]) // && ![item isKindOfClass: CPTokenField])
 	{
 	    [[CPNotificationCenter defaultCenter] addObserver:self selector:@selector(criterionChangedNotification:) name:CPControlTextDidEndEditingNotification object:item];
-	    return;
-	}
-
-	if(![item isKindOfClass:CPControl])
-		return;
-
-	if([item respondsToSelector:@selector(objectValue)])
+	} else 	if([item respondsToSelector:@selector(objectValue)])
 	    [item addObserver:self forKeyPath:@"objectValue" options:CPKeyValueObservingOptionNew | CPKeyValueObservingOptionOld context:nil];
-	if([item respondsToSelector:@selector(stringValue)])
+	else if([item respondsToSelector:@selector(stringValue)])
 	    [item addObserver:self forKeyPath:@"stringValue" options:CPKeyValueObservingOptionNew | CPKeyValueObservingOptionOld context:nil];
-	if([item respondsToSelector:@selector(color)])
-	    [item addObserver:self forKeyPath:@"color" options:CPKeyValueObservingOptionNew | CPKeyValueObservingOptionOld context:nil];
 }
 
 - (void)observeValueForKeyPath:(CPString)aKeyPath ofObject:(id)anObject change:(CPDictionary)changes context:(id)aContext

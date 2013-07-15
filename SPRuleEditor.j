@@ -779,12 +779,12 @@ CPNotPredicateModifier = 4;
 -(CPArray)refreshCriteriaForRow:(SPRuleEditorModelItem)aRow rowIndex:(CPInteger)rowIndex rowType:(CPInteger)rowType startingAtIndex:(CPInteger)index currentValueIndex:valueIndex currentValue:(id)currentValue
 {
 	var oldCriteria=[[aRow criteria] copy];
-	var oldCount=[oldCriteria count];
 	var newCriteria=[self _refreshCriteriaForRow: aRow rowIndex: rowIndex rowType: rowType startingAtIndex: index currentValueIndex: valueIndex currentValue: currentValue];	
+	var oldCount=[oldCriteria count], newCount=[newCriteria count];
 
 	if(oldCount && index>=1)
 	{	var i;
-		for(i= index-1; i< oldCount; i++)
+		for(i= index-1; i< oldCount && i< newCount; i++)
 		{	var newClass= [[[newCriteria objectAtIndex: i] displayValue] class];
 			// try to preserve criteria value whenever possible
 			if(newClass!== CPMenuItem && [[[oldCriteria objectAtIndex: i] displayValue] class] === newClass)
@@ -1359,10 +1359,12 @@ CPNotPredicateModifier = 4;
 
 		if(![currCrit._displayValue isKindOfClass: [CPMenuItem class]])
 		{	var mv= [[myPredicate rightExpression] constantValue];
-			if([currCrit._displayValue isKindOfClass:CPTokenField] && ! [mv isKindOfClass:CPArray])
+			if([currCrit._displayValue isKindOfClass:CPTokenField] && [mv isKindOfClass:CPString])
 				mv=mv.split(",");
-			else if([currCrit._displayValue isKindOfClass:CPDatePicker])
-			{	var parts = mv.split('-');
+			else if([currCrit._displayValue isKindOfClass:CPDatePicker]  && [mv isKindOfClass:CPString])
+			{
+//debugger
+				var parts = mv.split('-');
   				mv=new Date(parts[0], parts[1]-1, parts[2]); // months are 0-based
 			}
 			[currCrit._displayValue setObjectValue: mv];
@@ -1390,12 +1392,13 @@ CPNotPredicateModifier = 4;
 		{	var component= @{ SPRuleEditorPredicateCompoundType: [CPNumber numberWithInt: [myPredicate compoundPredicateType]]
 							};
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
+//			alert(title)
 			[self _adjustViewForTitle: title startingAtColumn: 0  inRow: myRow];
 		}
 	}
 }
 
-- (void)_setSubpredicates: predicates forParentIndex: parentIndex
+- (unsigned)_setSubpredicates: predicates forParentIndex: parentIndex
 {
 	var count = [predicates count];
 	var currentIndex= parentIndex+1;
@@ -1407,12 +1410,16 @@ CPNotPredicateModifier = 4;
 		}
 		var criteria=[self refreshCriteriaForNewRowOfType: rowType atIndex: currentIndex];
 		[_model insertNewRowAtIndex: currentIndex ofType: rowType withParentRowIndex: parentIndex criteria:criteria];
-		[self _fixCriteriaLeftForPredicate: subpredicate inRow: currentIndex];
-		[self _fixCriteriaRightForPredicate: subpredicate inRow: currentIndex];
 		if(rowType == SPRuleEditorRowTypeCompound)
-			[self _setSubpredicates: subpredicate._predicates forParentIndex: currentIndex];
+		{	[self _fixCriteriaLeftForPredicate: subpredicate inRow: currentIndex];
+			currentIndex=[self _setSubpredicates: subpredicate._predicates forParentIndex: currentIndex]-1;
+		} else
+		{
+			[self _fixCriteriaLeftForPredicate: subpredicate inRow: currentIndex];
+			[self _fixCriteriaRightForPredicate: subpredicate inRow: currentIndex];
+		}
 	}
-
+	return currentIndex;
 }
 - (void)setPredicate: myPredicate
 {
