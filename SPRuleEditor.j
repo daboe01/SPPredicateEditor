@@ -42,7 +42,6 @@ SPRuleEditorRowsDidChangeNotification   = @"SPRuleEditorRowsDidChangeNotificatio
 
 SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 
-CPNotPredicateModifier = 4;
 
 /*!
     @ingroup appkit
@@ -1361,11 +1360,19 @@ CPNotPredicateModifier = 4;
 		{	var mv= [[myPredicate rightExpression] constantValue];
 			if([currCrit._displayValue isKindOfClass:CPTokenField] && [mv isKindOfClass:CPString])
 				mv=mv.split(",");
-			else if([currCrit._displayValue isKindOfClass:CPDatePicker]  && [mv isKindOfClass:CPString])
-			{
-//debugger
-				var parts = mv.split('-');
-  				mv=new Date(parts[0], parts[1]-1, parts[2]); // months are 0-based
+			else if([currCrit._displayValue isKindOfClass: CPDatePicker]  && [mv isKindOfClass:CPString])
+			{	if ([currCrit._displayValue datePickerElements] == CPHourMinuteDatePickerElementFlag)	// _only_ hour:min
+				{	var components = mv.split(' ');
+					var parts = components[1].split(':');
+					parts[2]=0;
+					mv=new Date(1900,0,1);	// this can easily be detected and blanked by the delegate
+					mv.setHours(parts[0],parts[1],parts[2])
+				}
+				else
+				{	var components = mv.split(' ');
+					var parts = components[0].split('-');
+					mv=new Date(parts[0], parts[1]-1, parts[2]); // months are 0-based
+				}
 			}
 			[currCrit._displayValue setObjectValue: mv];
 			[self valueChanged: currCrit._displayValue criterionIndex: i valueIndex: 0 inRow: [_model rowAtIndex: myRow] ];
@@ -1382,9 +1389,11 @@ CPNotPredicateModifier = 4;
 		if([myPredicate isKindOfClass: CPComparisonPredicate])
 		{	var component= @{SPRuleEditorPredicateOperatorType: [CPNumber numberWithInt: [myPredicate predicateOperatorType]],
 							 SPRuleEditorPredicateComparisonModifier: [CPNumber numberWithInt: [myPredicate comparisonPredicateModifier]],
+							 SPRuleEditorPredicateOptions: [CPNumber numberWithInt: [myPredicate options]],
 							 SPRuleEditorPredicateLeftExpression: [myPredicate leftExpression],
 							 SPRuleEditorPredicateRightExpression: [myPredicate rightExpression]
 							};
+// alert(component)
 			[self _adjustViewForTitle: [[myPredicate leftExpression] description] startingAtColumn: i inRow: myRow];
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
 			[self _adjustViewForTitle: title startingAtColumn: 1 inRow: myRow];
