@@ -63,6 +63,7 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
     @n      An ordered to-many relation containing the criteria for the row.
 */
 
+
 @implementation SPRuleEditor : CPControl
 {
     SPRuleEditorModel   _model @accessors(readonly,property=model);
@@ -796,42 +797,36 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 
 -(CPArray)_refreshCriteriaForRow:(SPRuleEditorModelItem)aRow rowIndex:(CPInteger)rowIndex rowType:(CPInteger)rowType startingAtIndex:(CPInteger)index currentValueIndex:valueIndex currentValue:(id)currentValue
 {
-	if(!aRow&&index>0)
+	if(!aRow && index > 0)
 		[CPException raise:CPInternalInconsistencyException reason:_cmd+@" : startingIndex must be 0 when refreshing criteria from delegate when row is not yet created"];
-	if(aRow&&valueIndex<0)
+	if(aRow && valueIndex < 0)
 		[CPException raise:CPInternalInconsistencyException reason:_cmd+@" : parentValueIndex must be >= 0"];
 
 	var criteria;	
 	var currentCriterion=nil;
 	var currentCriterionItem=nil;
 	
-	if(aRow && index>=0)
-	{
-		var criteria=[aRow criteria];
+	if(aRow && index > 0)
+	{	var criteria=[aRow criteria];
 		var count=[criteria count];
 		
-		for(var i=index;i<count;i++)
-			[criteria removeObjectAtIndex:index];
+		for(var i=index;i<count;i++) [criteria removeObjectAtIndex:index];
 
-		count=[criteria count];
-		if(count)
-		{
-			currentCriterion=criteria[count-1];
+		if(count=[criteria count])
+		{	currentCriterion=criteria[count-1];
 			[currentCriterion setDisplayValue:currentValue];
 		}
 	}
-	else
-		criteria=[[CPMutableArray alloc] init];
+	else criteria=[[CPMutableArray alloc] init];
 	
 	if(currentCriterion)
-	{
-		var items=[currentCriterion items]
-		var count=items?[items count]:0;
+	{	var items=[currentCriterion items]
+		var count=items ? [items count] : 0;
 		if(!count)
 			[CPException raise:CPInternalInconsistencyException reason:_cmd+@" : invalid internal criterion object"];
-		if(valueIndex>=count)
+		if(valueIndex >= count)
 			[CPException raise:CPInternalInconsistencyException reason:_cmd+@" : invalid internal criterion object"];
-		currentCriterionItem=items[valueIndex];
+		currentCriterionItem = items[valueIndex];
 		[currentCriterion setCurrentIndex:valueIndex];
 	}
 	
@@ -844,7 +839,7 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 		var items=[CPMutableArray arrayWithCapacity:nb];
 		for(var i=0;i<nb;i++)
 		{
-			criterionItem=[_delegate ruleEditor:self child:i forCriterion:currentCriterionItem withRowType:rowType];
+			criterionItem=[_delegate ruleEditor: self child:i forCriterion:currentCriterionItem withRowType:rowType];
 			if(!criterionItem)
 				[CPException raise:CPInternalInconsistencyException reason:_cmd+@" : delegate must return not null criterion children"];
 			[items addObject:criterionItem];
@@ -854,8 +849,8 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 			[CPException raise:CPInternalInconsistencyException reason:_cmd+@" : infinite loop detected"];
 
 		currentCriterionItem=[items objectAtIndex:0];
-		criterionDisplayValue=[_delegate ruleEditor:self displayValueForCriterion:currentCriterionItem inRow:rowIndex];
-		
+		criterionDisplayValue=[_delegate ruleEditor:self displayValueForCriterion: currentCriterionItem inRow:rowIndex];
+
 		[criteria addObject:[[SPRuleEditorCriterion alloc] initWithItems:items displayValue:criterionDisplayValue]];
 		if(_setObjectValueIsMuted) break;
 	}
@@ -1219,7 +1214,7 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 	if(rowIndex==CPNotFound)
 		return;
 		
-	var criteria=[self refreshCriteriaForRow:aRow rowIndex:rowIndex rowType:SPRuleEditorRowTypeSimple 
+	var criteria=[self refreshCriteriaForRow: aRow rowIndex:rowIndex rowType:SPRuleEditorRowTypeSimple 
 		startingAtIndex:index+1 currentValueIndex:valueIndex currentValue:value];
 
 	[self willModifyRow:aRow];
@@ -1228,6 +1223,7 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 
 -(id)criterionItemCopy:(id)item
 {
+//return item;
 	return [item copy];
 }
 
@@ -1280,41 +1276,32 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 	}
 }
 
-- (void)_adjustViewForTitle: myTitle startingAtColumn:(unsigned) col inRow: myRow
-{	var rowView= [_contentView rowViewWithItem: [_model rowAtIndex: myRow]];
-	var subviews=[[rowView contentView] subviews];
+- (void)_adjustViewForTitle: myTitle startingAtColumn:(unsigned) col inRow: myRowIndex
+{	var myRow= [_model rowAtIndex: myRowIndex];
+	var criteria=[myRow criteria];
 
-	var i, subviewsCount= [subviews count];
+	var i, subviewsCount= [criteria count];
 	for (i= col; i < subviewsCount; i++)
-	{	var view=[subviews objectAtIndex: i];
-		if([view isKindOfClass: [CPPopUpButton class]])
-		{	var items=[view itemArray];
-			var j, itemsCount= [items count];
-			for (j=0; j < itemsCount; j++)
-			{
-				if([items[j] title] == myTitle)
-				{	[view selectItemWithTitle: myTitle ];
-
-					var valueIndex= [view indexOfSelectedItem];
-					[self valueChanged: [view selectedItem] criterionIndex: i valueIndex: valueIndex inRow: [_model rowAtIndex: myRow] ]
-					return;
-				}
+	{	var items= [[criteria objectAtIndex: i] items];
+		var j, itemsCount= [items count];
+		for (j=0; j < itemsCount; j++)
+		{	if([items[j] title] == myTitle)
+			{	[self valueChanged: items[j] criterionIndex: i valueIndex: j inRow: myRow ];
+				return;
 			}
 		}
 	}
 }
 
-- (CPArray)_getTitlesInRow: myRow
-{	var rowView= [_contentView rowViewWithItem: [_model rowAtIndex: myRow]];
-	var subviews=[[rowView contentView] subviews];
+- (CPArray)_getTitlesInRow: myRowIndex
+{	var myRow= [_model rowAtIndex: myRowIndex];
+	var criteria=[myRow criteria];
 	var ret=[];
-	var i, subviewsCount= [subviews count];
+	var i, subviewsCount= [criteria count];
 	for (i=0; i < subviewsCount; i++)
-	{	var view=[subviews objectAtIndex: i];
-		if([view isKindOfClass: [CPPopUpButton class]])
-		{	var items=[view itemArray];
-			[ret addObject: items];
-		}
+	{	var items= [[criteria objectAtIndex: i] items];
+		[ret addObject: items];
+
 	} return ret;
 }
 
@@ -1393,7 +1380,6 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 							 SPRuleEditorPredicateLeftExpression: [myPredicate leftExpression],
 							 SPRuleEditorPredicateRightExpression: [myPredicate rightExpression]
 							};
-// alert(component)
 			[self _adjustViewForTitle: [[myPredicate leftExpression] description] startingAtColumn: i inRow: myRow];
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
 			[self _adjustViewForTitle: title startingAtColumn: 1 inRow: myRow];
@@ -1401,10 +1387,10 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 		{	var component= @{ SPRuleEditorPredicateCompoundType: [CPNumber numberWithInt: [myPredicate compoundPredicateType]]
 							};
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
-//			alert(title)
 			[self _adjustViewForTitle: title startingAtColumn: 0  inRow: myRow];
 		}
-	}
+	} 
+
 }
 
 - (unsigned)_setSubpredicates: predicates forParentIndex: parentIndex
@@ -1424,7 +1410,10 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 			currentIndex=[self _setSubpredicates: subpredicate._predicates forParentIndex: currentIndex]-1;
 		} else
 		{
+
+			[[CPNotificationCenter defaultCenter] removeObserver: _contentView name: SPRuleEditorModelRowModified object:_model];
 			[self _fixCriteriaLeftForPredicate: subpredicate inRow: currentIndex];
+			[[CPNotificationCenter defaultCenter] addObserver: _contentView selector:@selector(rowModified:) name: SPRuleEditorModelRowModified object:_model];
 			[self _fixCriteriaRightForPredicate: subpredicate inRow: currentIndex];
 		}
 	}

@@ -196,14 +196,14 @@ SPRuleEditorViewAltKeyUp = @"SPRuleEditorViewAltKeyUp";
 	for(var i=0;i<count;i++)
 	{
 		criterion=criteria[i];
-		if(![criterion isKindOfClass:SPRuleEditorCriterion]||![criterion isValid])
+		if(![criterion isKindOfClass:SPRuleEditorCriterion] || ![criterion isValid])
 			[CPException raise:CPInternalInconsistencyException reason:_cmd+@" : Invalid SPRuleEditorCriterion"];
 
 		displayValue=[criterion displayValue];
 
 		if( [criterion isStandaloneView])
 		{
-			previousCriterion=[self addViewForCriterion:criterion withValue:displayValue atIndex:i afterCriterionView:previousCriterion];
+			previousCriterion=[self addViewForCriterion: criterion withValue:displayValue atIndex:i afterCriterionView:previousCriterion];
 			continue;
 		}
 		
@@ -464,7 +464,7 @@ SPRuleEditorViewAltKeyUp = @"SPRuleEditorViewAltKeyUp";
 	
 	if([value isKindOfClass:CPView])
 	{
-		view=[_delegate criterionItemCopy:value];
+		view=[_delegate criterionItemCopy: value];
 		[view setHidden:[criterion hidden]];
 		[self addCriterionView:view afterCriterionView:previousCriterion];
 		[self bindCriterionViewItem: view];

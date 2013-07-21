@@ -355,7 +355,7 @@
 	if(context)
 	{
 		var userInfo=[CPDictionary dictionaryWithObjects:[_parent,index,self] forKeys:["parentRow","index","row"]];
-    	[[CPNotificationCenter defaultCenter] postNotificationName:SPRuleEditorModelRowModified object:context userInfo:userInfo];
+		[[CPNotificationCenter defaultCenter] postNotificationName: SPRuleEditorModelRowModified object:context userInfo:userInfo];
     }
 }
 
