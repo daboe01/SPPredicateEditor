@@ -59,7 +59,7 @@
 
     _rowType=type;
 	_subrows=nil;
-	_criteria=[[CPArray alloc] initWithArray:criteria copyItems:YES];
+	_criteria=[[CPArray alloc] initWithArray:criteria copyItems: YES];
 	_depth=0;
 	_parent=nil;
 	_canRemoveAllRows=YES;
@@ -355,7 +355,7 @@
 	if(context)
 	{
 		var userInfo=[CPDictionary dictionaryWithObjects:[_parent,index,self] forKeys:["parentRow","index","row"]];
-		[[CPNotificationCenter defaultCenter] postNotificationName: SPRuleEditorModelRowModified object:context userInfo:userInfo];
+		[[CPNotificationCenter defaultCenter] postNotificationName:SPRuleEditorModelRowModified object:context userInfo:userInfo];
     }
 }
 

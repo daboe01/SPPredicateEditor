@@ -1341,7 +1341,7 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 	var count = [crits count];
 
     for(var i=0; i < count; i++)
-	{	var  currCrit= [crits objectAtIndex:i];
+	{	var  currCrit= crits[i];
 
 		if(![currCrit._displayValue isKindOfClass: [CPMenuItem class]])
 		{	var mv= [[myPredicate rightExpression] constantValue];
@@ -1363,6 +1363,7 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 			}
 			[currCrit._displayValue setObjectValue: mv];
 			[self valueChanged: currCrit._displayValue criterionIndex: i valueIndex: 0 inRow: [_model rowAtIndex: myRow] ];
+			return;
 		}
 	}
 }
@@ -1389,12 +1390,11 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
 			var title=[self _itemForPredicateComponent: component criterion: currCrit inRow: myRow];
 			[self _adjustViewForTitle: title startingAtColumn: 0  inRow: myRow];
 		}
-	} 
-
+	}
 }
 
 - (unsigned)_setSubpredicates: predicates forParentIndex: parentIndex
-{
+{	var myNotiCenter=[CPNotificationCenter defaultCenter];
 	var count = [predicates count];
 	var currentIndex= parentIndex+1;
 	for (var i=0; i < count; i++, currentIndex++)
@@ -1403,17 +1403,17 @@ SPRuleEditorItemPBoardType  = @"SPRuleEditorItemPBoardType";
         if ([subpredicate isKindOfClass:[CPCompoundPredicate class]] )
 		{	rowType = SPRuleEditorRowTypeCompound;
 		}
+		[myNotiCenter removeObserver: _contentView name: SPRuleEditorModelRowModified object:_model];
 		var criteria=[self refreshCriteriaForNewRowOfType: rowType atIndex: currentIndex];
 		[_model insertNewRowAtIndex: currentIndex ofType: rowType withParentRowIndex: parentIndex criteria:criteria];
+		[myNotiCenter addObserver: _contentView selector:@selector(rowModified:) name: SPRuleEditorModelRowModified object:_model];
 		if(rowType == SPRuleEditorRowTypeCompound)
 		{	[self _fixCriteriaLeftForPredicate: subpredicate inRow: currentIndex];
 			currentIndex=[self _setSubpredicates: subpredicate._predicates forParentIndex: currentIndex]-1;
 		} else
-		{
-
-			[[CPNotificationCenter defaultCenter] removeObserver: _contentView name: SPRuleEditorModelRowModified object:_model];
+		{	[myNotiCenter removeObserver: _contentView name: SPRuleEditorModelRowModified object:_model];
 			[self _fixCriteriaLeftForPredicate: subpredicate inRow: currentIndex];
-			[[CPNotificationCenter defaultCenter] addObserver: _contentView selector:@selector(rowModified:) name: SPRuleEditorModelRowModified object:_model];
+			[myNotiCenter addObserver: _contentView selector:@selector(rowModified:) name: SPRuleEditorModelRowModified object:_model];
 			[self _fixCriteriaRightForPredicate: subpredicate inRow: currentIndex];
 		}
 	}
