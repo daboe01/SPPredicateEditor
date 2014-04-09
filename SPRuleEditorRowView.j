@@ -1,4 +1,3 @@
-
 /*
  * SPRuleEditorRowView.j
  * AppKit
@@ -66,7 +65,6 @@ SPRuleEditorViewAltKeyUp = @"SPRuleEditorViewAltKeyUp";
 	BOOL 					_showDragIndicator @accessors(property=showDragIndicator);
 	CPImage                 _alternateAddButtonImage; 
 	CPNotificationCenter	_notificationCenter;
-	CPImage 				_alternateAddButtonImage;
 	
 	BOOL 					_frozenActions;
 	BOOL 					_updating;
